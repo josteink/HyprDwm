@@ -20,6 +20,7 @@ uniform float angle;
 uniform float angle2;
 uniform float gradientLerp;
 uniform float alpha;
+uniform int   bevel;
 
 uniform float radius;
 uniform float roundingPower;
@@ -45,7 +46,7 @@ void main() {
     fragColor =
 #endif
         getBorder(v_texcoord, alpha, fullSizeUntransformed, radiusOuter, thick, radius, roundingPower, topLeft, fullSize, gradientLength, gradient, angle, gradient2Length,
-                  gradient2, angle2, gradientLerp
+                  gradient2, angle2, gradientLerp, bevel
 #if USE_CM
                   ,
                   sourceTF, targetTF, convertMatrix, srcTFRange, dstTFRange

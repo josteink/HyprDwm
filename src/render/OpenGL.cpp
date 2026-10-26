@@ -2086,6 +2086,8 @@ void CHyprOpenGLImpl::renderBorder(CRenderContext& ctx, const CBox& box, const C
     shader->setUniformFloat(SHADER_RADIUS_OUTER, data.outerRound == -1 ? round : data.outerRound);
     shader->setUniformFloat(SHADER_ROUNDING_POWER, data.roundingPower);
     shader->setUniformFloat(SHADER_THICK, scaledBorderSize);
+    static auto PBORDERBEVEL = CConfigValue<Config::BOOL>("decoration:border_bevel");
+    shader->setUniformInt(SHADER_BEVEL, *PBORDERBEVEL ? 1 : 0);
 
     glBindVertexArray(shader->getUniformLocation(SHADER_SHADER_VAO));
 
@@ -2172,6 +2174,8 @@ void CHyprOpenGLImpl::renderBorder(CRenderContext& ctx, const CBox& box, const C
     shader->setUniformFloat(SHADER_RADIUS_OUTER, data.outerRound == -1 ? round : data.outerRound);
     shader->setUniformFloat(SHADER_ROUNDING_POWER, data.roundingPower);
     shader->setUniformFloat(SHADER_THICK, scaledBorderSize);
+    static auto PBORDERBEVEL = CConfigValue<Config::BOOL>("decoration:border_bevel");
+    shader->setUniformInt(SHADER_BEVEL, *PBORDERBEVEL ? 1 : 0);
 
     glBindVertexArray(shader->getUniformLocation(SHADER_SHADER_VAO));
 
