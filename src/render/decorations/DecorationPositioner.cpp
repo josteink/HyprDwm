@@ -3,6 +3,7 @@
 #include "../../desktop/view/window/WindowPresentation.hpp"
 #include "../../layout/target/Target.hpp"
 #include "../../event/EventBus.hpp"
+#include "../../managers/fullscreen/FullscreenController.hpp"
 
 CDecorationPositioner::CDecorationPositioner() {
     static auto P  = Event::bus()->m_events.window.close.listen([this](PHLWINDOW window) { onWindowUnmap(window); });
@@ -276,7 +277,19 @@ void CDecorationPositioner::onWindowUpdate(PHLWINDOW pWindow) {
 
     if (WINDOWDATA->extents != SBoxExtents{{stickyOffsetXL + reservedXL, stickyOffsetYT + reservedYT}, {stickyOffsetXR + reservedXR, stickyOffsetYB + reservedYB}}) {
         WINDOWDATA->extents = {{stickyOffsetXL + reservedXL, stickyOffsetYT + reservedYT}, {stickyOffsetXR + reservedXR, stickyOffsetYB + reservedYB}};
+
+        // Maximized/fullscreen windows normally ignore layout recalculations after the FS
+        // handler has positioned them. A decoration changing the reserved area still has
+        // to be applied, otherwise the client keeps its old size until the FS state changes.
+        const bool WASPOSQUEUED = Fullscreen::controller()->m_windowPosSettingQueued;
+        const bool ISFS         = Fullscreen::controller()->getFullscreenModes(pWindow).internal != Fullscreen::FSMODE_NONE;
+
+        if (ISFS)
+            Fullscreen::controller()->m_windowPosSettingQueued = true;
+
         pWindow->layoutTarget()->recalc();
+
+        Fullscreen::controller()->m_windowPosSettingQueued = WASPOSQUEUED;
     }
 
     // update cached decoration extents for getWindowDecorationExtents
@@ -308,6 +321,11 @@ SBoxExtents CDecorationPositioner::computeWindowDecorationExtents(PHLWINDOWREF p
 
     for (auto const& data : WIT->second.positioningDatas) {
         if (!data->pDecoration || (inputOnly && !(data->pDecoration->getDecorationFlags() & DECORATION_ALLOWS_MOUSE_INPUT)))
+            continue;
+
+        // Reserved decorations are already accounted for in getWindowDecorationReserved().
+        // Counting them here too would make the input box larger than the decorated window.
+        if (inputOnly && data->positioningInfo.reserved)
             continue;
 
         CBox decoBox;

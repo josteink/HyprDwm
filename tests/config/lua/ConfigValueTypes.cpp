@@ -206,6 +206,29 @@ TEST(ConfigLuaValueTypes, colorParseAndPush) {
     err = value.parse(L);
     lua_pop(L, 1);
     EXPECT_EQ(err.errorCode, PARSE_ERROR_BAD_VALUE);
+
+    lua_pushinteger(L, 0xFF00FF00);
+    err = value.parse(L);
+    lua_pop(L, 1);
+    EXPECT_EQ(err.errorCode, PARSE_ERROR_OK);
+    EXPECT_EQ(value.parsed(), 0xFF00FF00);
+
+    lua_pushinteger(L, -1);
+    err = value.parse(L);
+    lua_pop(L, 1);
+    EXPECT_EQ(err.errorCode, PARSE_ERROR_OK);
+    EXPECT_EQ(value.parsed(), -1);
+
+    lua_pushstring(L, "-1");
+    err = value.parse(L);
+    lua_pop(L, 1);
+    EXPECT_EQ(err.errorCode, PARSE_ERROR_OK);
+    EXPECT_EQ(value.parsed(), -1);
+
+    lua_pushnumber(L, 0x100000000);
+    err = value.parse(L);
+    lua_pop(L, 1);
+    EXPECT_EQ(err.errorCode, PARSE_ERROR_BAD_VALUE);
 }
 
 TEST(ConfigLuaValueTypes, vec2ParseValidateAndPush) {

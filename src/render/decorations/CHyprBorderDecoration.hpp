@@ -34,6 +34,8 @@ class CHyprBorderDecoration : public IHyprWindowDecoration {
     int                                borderSize() const;
     void                               invalidateBorderSize();
 
+    CHyprColor                         currentColor() const;
+
   private:
     SBoxExtents                 m_extents;
     SBoxExtents                 m_reportedExtents;

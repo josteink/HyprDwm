@@ -13,6 +13,7 @@
 class CHyprBorderDecoration;
 class CHyprDropShadowDecoration;
 class CHyprInnerGlowDecoration;
+class CHyprTitleBarDecoration;
 
 namespace Workspace {
     class CWorkspacePresentable;
@@ -60,6 +61,7 @@ namespace Desktop::View {
 
         int                                               borderSize() const;
         void                                              invalidateBorderSize();
+        CHyprColor                                        borderColor() const;
         bool                                              opaque() const;
         bool                                              opaque(const Render::SWindowRenderPresentation& presentation) const;
         Render::SWindowRenderPresentation                 renderPresentation() const;
@@ -106,6 +108,7 @@ namespace Desktop::View {
         SP<CHyprDropShadowDecoration>              m_shadowDecoration;
         SP<CHyprBorderDecoration>                  m_borderDecoration;
         SP<CHyprInnerGlowDecoration>               m_glowDecoration;
+        SP<CHyprTitleBarDecoration>                m_titleBarDecoration;
         Types::CMultiAVarContainer<float, uint8_t> m_alpha;
         PHLANIMVAR<float>                          m_dimPercent;
         PHLANIMVAR<float>                          m_notRespondingTint;

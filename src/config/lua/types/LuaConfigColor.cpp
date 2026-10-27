@@ -2,6 +2,7 @@
 
 #include <expected>
 #include <format>
+#include <string_view>
 
 #include "../../shared/parserUtils/ParserUtils.hpp"
 
@@ -23,8 +24,26 @@ CLuaConfigColor::CLuaConfigColor(Config::INTEGER def) : m_default(def), m_data(d
 }
 
 SParseError CLuaConfigColor::parse(lua_State* s) {
+    // Lua treats numbers as strings too, so check the numeric form first.
+    if (lua_type(s, -1) == LUA_TNUMBER) {
+        const auto NUM = sc<Config::INTEGER>(lua_tointeger(s, -1));
+
+        if (NUM != -1 && (NUM < 0 || NUM > 0xFFFFFFFF))
+            return {.errorCode = PARSE_ERROR_BAD_VALUE, .message = std::format("color number {} is out of range", NUM)};
+
+        m_data       = NUM;
+        m_bSetByUser = true;
+        return {.errorCode = PARSE_ERROR_OK};
+    }
+
     if (lua_isstring(s, -1)) {
         auto data = lua_tostring(s, -1);
+
+        if (std::string_view{data} == "-1") {
+            m_data       = -1;
+            m_bSetByUser = true;
+            return {.errorCode = PARSE_ERROR_OK};
+        }
 
         auto col = parseColorString(data);
 
@@ -36,7 +55,7 @@ SParseError CLuaConfigColor::parse(lua_State* s) {
         return {.errorCode = PARSE_ERROR_OK};
     }
 
-    return {.errorCode = PARSE_ERROR_BAD_TYPE, .message = "color type requires a color string"};
+    return {.errorCode = PARSE_ERROR_BAD_TYPE, .message = "color type requires a color string or number"};
 }
 
 const std::type_info* CLuaConfigColor::underlying() {

@@ -11,6 +11,7 @@
 #include "../../../render/decorations/CHyprBorderDecoration.hpp"
 #include "../../../render/decorations/CHyprDropShadowDecoration.hpp"
 #include "../../../render/decorations/CHyprInnerGlowDecoration.hpp"
+#include "../../../render/decorations/CHyprTitleBarDecoration.hpp"
 #include "../../../render/decorations/DecorationPositioner.hpp"
 #include "../../../render/WindowRenderPresentation.hpp"
 #include "../../../render/scene/SceneSelection.hpp"
@@ -47,7 +48,7 @@ class CDecorationSnapshot {
     }
 
   private:
-    std::array<SP<IHyprWindowDecoration>, 4>   m_inline;
+    std::array<SP<IHyprWindowDecoration>, 6>   m_inline;
     std::vector<SP<IHyprWindowDecoration>>     m_fallback;
     std::span<const SP<IHyprWindowDecoration>> m_decorations;
 };
@@ -59,14 +60,16 @@ CWindowPresentation::CWindowPresentation(CWindow& window) : m_window(window), m_
 CWindowPresentation::~CWindowPresentation() = default;
 
 void CWindowPresentation::initialize() {
-    const auto WINDOW  = m_window.m_self.lock();
-    m_shadowDecoration = makeShared<CHyprDropShadowDecoration>(WINDOW);
-    m_borderDecoration = makeShared<CHyprBorderDecoration>(WINDOW);
-    m_glowDecoration   = makeShared<CHyprInnerGlowDecoration>(WINDOW);
+    const auto WINDOW    = m_window.m_self.lock();
+    m_shadowDecoration   = makeShared<CHyprDropShadowDecoration>(WINDOW);
+    m_borderDecoration   = makeShared<CHyprBorderDecoration>(WINDOW);
+    m_glowDecoration     = makeShared<CHyprInnerGlowDecoration>(WINDOW);
+    m_titleBarDecoration = makeShared<CHyprTitleBarDecoration>(WINDOW);
 
     addDecorationInternal(m_shadowDecoration);
     addDecorationInternal(m_borderDecoration);
     addDecorationInternal(m_glowDecoration);
+    addDecorationInternal(m_titleBarDecoration);
 
     m_borderDecoration->initializeAnimations();
     Animation::mgr()->createAnimation(1.F, alpha(WINDOW_ALPHA_FADE), Config::animationTree()->getAnimationPropertyConfig("fadeIn"), WINDOW, AVARDAMAGE_ENTIRE);
@@ -117,7 +120,8 @@ void CWindowPresentation::addDecorationInternal(const SP<IHyprWindowDecoration>&
 }
 
 void CWindowPresentation::removeDecoration(IHyprWindowDecoration* decoration) {
-    if (!decoration || decoration == m_shadowDecoration.get() || decoration == m_borderDecoration.get() || decoration == m_glowDecoration.get())
+    if (!decoration || decoration == m_shadowDecoration.get() || decoration == m_borderDecoration.get() || decoration == m_glowDecoration.get() ||
+        decoration == m_titleBarDecoration.get())
         return;
 
     m_decosToRemove.push_back(decoration);
@@ -215,6 +219,10 @@ int CWindowPresentation::borderSize() const {
 
 void CWindowPresentation::invalidateBorderSize() {
     m_borderDecoration->invalidateBorderSize();
+}
+
+CHyprColor CWindowPresentation::borderColor() const {
+    return m_borderDecoration->currentColor();
 }
 
 bool CWindowPresentation::opaque() const {

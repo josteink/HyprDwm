@@ -22,6 +22,8 @@ class CAnimatedDecorationGradient {
     void         initializeAnimations(PHLWINDOW window, SP<IHyprWindowDecoration> decoration, const std::string& fadeConfig, const std::string& angleConfig);
     void         setTarget(const Config::CGradientValueData& gradient, bool transition = true);
     SRenderState renderState() const;
+
+    CHyprColor   currentFirstColor() const;
     void         onWindowMap();
     void         onWindowFocus();
 

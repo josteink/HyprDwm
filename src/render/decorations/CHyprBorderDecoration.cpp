@@ -230,6 +230,10 @@ void CHyprBorderDecoration::invalidateBorderSize() {
     m_borderSizeCacheDirty = true;
 }
 
+CHyprColor CHyprBorderDecoration::currentColor() const {
+    return m_gradient.currentFirstColor();
+}
+
 bool CHyprBorderDecoration::doesntWantBorders() {
     return m_window->backend().traits().suggestsNoBorder || borderSize() == 0 || !m_window->m_ruleApplicator->decorate().valueOrDefault();
 }

@@ -2495,3 +2495,43 @@ TEST_CASE(windowThatGoesFullscreenBecomesActive) {
     ASSERT_CONTAINS(str, "class: kittyA\n");
     EXPECT_CONTAINS(str, "fullscreen: 2\n");
 }
+
+TEST_CASE(titleBarReservesTopSpace) {
+    OK(getFromSocket("/eval hl.config({ decoration = { titlebar = { enabled = true, height = 20 } } })"));
+
+    SPAWN_KITTY("kitty_titlebar", {"-o", "remember_window_size=no"});
+    Tests::sync();
+
+    {
+        const auto STR = getFromSocket("/activewindow");
+        EXPECT(Tests::getAttribute(STR, "at") == "22,42", true);
+        EXPECT(Tests::getAttribute(STR, "size") == "1876,1016", true);
+    }
+
+    OK(getFromSocket("/eval hl.config({ decoration = { titlebar = { enabled = false } } })"));
+    Tests::sync();
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    {
+        const auto STR = getFromSocket("/activewindow");
+        EXPECT(Tests::getAttribute(STR, "at") == "22,22", true);
+        EXPECT(Tests::getAttribute(STR, "size") == "1876,1036", true);
+    }
+}
+
+TEST_CASE(titleBarCloseButton) {
+    OK(getFromSocket("/eval hl.config({ decoration = { titlebar = { enabled = true, height = 20 } } })"));
+
+    SPAWN_KITTY("kitty_titlebar_close", {"-o", "confirm_os_window_close=0", "-o", "remember_window_size=no"});
+    Tests::sync();
+
+    // Title bar row: x=22, y=22, size 1876x20. Close button: 20x20 at (1878,22).
+    OK(getFromSocket("/dispatch hl.dsp.cursor.move({ x = 1888, y = 32 })"));
+    OK(getFromSocket("/eval hl.plugin.test.click(272, 1)"));
+    OK(getFromSocket("/eval hl.plugin.test.click(272, 0)"));
+
+    Tests::waitUntilWindowsN(0);
+    EXPECT(Tests::windowCount() == 0, true);
+
+    OK(getFromSocket("/eval hl.config({ decoration = { titlebar = { enabled = false } } })"));
+}

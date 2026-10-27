@@ -33,6 +33,13 @@ void CAnimatedDecorationGradient::setTarget(const Config::CGradientValueData& gr
     *m_fadeProgress = 1.F;
 }
 
+CHyprColor CAnimatedDecorationGradient::currentFirstColor() const {
+    if (m_current.m_colors.empty())
+        return CHyprColor(0);
+
+    return m_current.m_colors.front();
+}
+
 CAnimatedDecorationGradient::SRenderState CAnimatedDecorationGradient::renderState() const {
     SRenderState state = {
         .current       = m_current,

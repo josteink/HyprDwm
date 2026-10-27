@@ -16,7 +16,8 @@ enum eDecorationType : int8_t {
     DECORATION_SHADOW,
     DECORATION_INNER_GLOW,
     DECORATION_BORDER,
-    DECORATION_CUSTOM
+    DECORATION_CUSTOM,
+    DECORATION_TITLEBAR // keep last: DECORATION_CUSTOM is part of the plugin API
 };
 
 enum eDecorationLayer : uint8_t {

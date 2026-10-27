@@ -231,8 +231,29 @@ std::vector<SP<IValue>> Values::getConfigValues() {
         MS<Float>("decoration:dim_around", "how much the dimaround window rule should dim by.", 0.4, {.min = 0, .max = 1, .refresh = Supplementary::REFRESH_WINDOW_STATES}),
         MS<String>("decoration:screen_shader", "a path to a custom shader to be applied at the end of rendering.", STRVAL_EMPTY, {.refresh = Supplementary::REFRESH_SCREEN_SHADER}),
         MS<Bool>("decoration:border_part_of_window", "whether the border should be treated as a part of the window.", true),
-        MS<Bool>("decoration:border_bevel", "Motif bevel on window borders: light top and left, dark bottom and right, derived from the border color.", false,
+        MS<Bool>("decoration:border_bevel", "Motif bevel on window borders and title bars: light top and left, dark bottom and right, derived from the border color.", false,
                  {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+
+        /*
+         * decoration:titlebar:
+         */
+
+        MS<Bool>("decoration:titlebar:enabled", "enable CDE-like window title bars", false, {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Int>("decoration:titlebar:height", "height of the title bar in layout px", 20, {.min = 8, .max = 100, .refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<String>("decoration:titlebar:font_family", "font used to display title bar titles. Empty uses misc:font_family.", "[[EMPTY]]",
+                   {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Int>("decoration:titlebar:font_size", "font size of title bar titles", 10, {.min = 2, .max = 64, .refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Color>("decoration:titlebar:col.active", "title bar background color for the active window. -1 follows the active border color.", -1,
+                  {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Color>("decoration:titlebar:col.inactive", "title bar background color for inactive windows. -1 follows the inactive border color.", -1,
+                  {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Color>("decoration:titlebar:text_color", "color for title bar text", 0xffffffff, {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Color>("decoration:titlebar:text_color_inactive", "color for inactive title bar text. -1 follows the active text color.", -1,
+                  {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Bool>("decoration:titlebar:text_shadow", "render a one-pixel shadow behind title bar text and button glyphs", true, {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Color>("decoration:titlebar:text_shadow_color", "color for the title bar text shadow. -1 derives it from the title bar background.", -1,
+                  {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
+        MS<Bool>("decoration:titlebar:close_button", "show a close button on the right side of the title bar", true, {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
 
         /*
          * blur:
