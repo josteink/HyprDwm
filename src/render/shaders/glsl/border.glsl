@@ -28,7 +28,7 @@ vec4[2]
 vec4
 #endif
     getBorder(vec2 v_texcoord, float alpha, vec2 fullSizeUntransformed, float radiusOuter, float thick, float radius, float roundingPower, vec2 topLeft, vec2 fullSize,
-              int gradientLength, vec4 gradient[10], float angle, int gradient2Length, vec4 gradient2[10], float angle2, float gradientLerp, int bevel
+              int gradientLength, vec4 gradient[10], float angle, int gradient2Length, vec4 gradient2[10], float angle2, float gradientLerp, int bevel, float gripSize
 #if USE_CM
               ,
               int sourceTF, int targetTF, mat3 convertMatrix, vec2 srcTFRange, vec2 dstTFRange
@@ -114,6 +114,8 @@ vec4
 
     pixColor = getColorForCoord(v_texcoord, gradientLength, gradient, angle, gradient2Length, gradient2, angle2, gradientLerp);
 
+    vec3 faceRGB = pixColor.rgb;
+
     // bevel == 0 leaves the flat gradient, which is the Dracula frame.
     // Rounded-corner arc pixels (done) stay flat: the miter is only defined on the straight edges.
     if (bevel != 0 && !done && thick >= 1.0) {
@@ -144,6 +146,46 @@ vec4
                 bool innerLight = motifRaisedLight(px - inset, py - inset, iw, ih, b);
                 pixColor.rgb    = motifShade(pixColor.rgb, !innerLight);
             }
+        }
+    }
+
+    // 4DWM/SGI-style resize grips: a dark+light notch across the frame at the end
+    // of each corner arm. The arm length follows the title bar height.
+    if (gripSize > 0.0 && !done && thick >= 1.0 && gripSize > thick &&
+        gripSize * 2.0 < min(fullSizeUntransformed[0], fullSizeUntransformed[1])) {
+        float x  = originalPixCoord[0];
+        float y  = originalPixCoord[1];
+        float w  = fullSizeUntransformed[0];
+        float h  = fullSizeUntransformed[1];
+        float px = floor(x);
+        float py = floor(y);
+        float b  = thick >= 5.0 ? 2.0 : 1.0;
+
+        bool top    = py < thick;
+        bool bottom = py >= h - thick;
+        bool left   = px < thick;
+        bool right  = px >= w - thick;
+
+        if (top || bottom) {
+            if (px >= gripSize - b && px < gripSize)
+                pixColor.rgb = motifShade(faceRGB, false);
+            else if (px >= gripSize && px < gripSize + b)
+                pixColor.rgb = motifShade(faceRGB, true);
+            else if (px >= w - gripSize - b && px < w - gripSize)
+                pixColor.rgb = motifShade(faceRGB, true);
+            else if (px >= w - gripSize && px < w - gripSize + b)
+                pixColor.rgb = motifShade(faceRGB, false);
+        }
+
+        if (left || right) {
+            if (py >= gripSize - b && py < gripSize)
+                pixColor.rgb = motifShade(faceRGB, false);
+            else if (py >= gripSize && py < gripSize + b)
+                pixColor.rgb = motifShade(faceRGB, true);
+            else if (py >= h - gripSize - b && py < h - gripSize)
+                pixColor.rgb = motifShade(faceRGB, true);
+            else if (py >= h - gripSize && py < h - gripSize + b)
+                pixColor.rgb = motifShade(faceRGB, false);
         }
     }
 

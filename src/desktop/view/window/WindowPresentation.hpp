@@ -62,6 +62,7 @@ namespace Desktop::View {
         int                                               borderSize() const;
         void                                              invalidateBorderSize();
         CHyprColor                                        borderColor() const;
+        int                                               titleBarHeight() const;
         bool                                              opaque() const;
         bool                                              opaque(const Render::SWindowRenderPresentation& presentation) const;
         Render::SWindowRenderPresentation                 renderPresentation() const;

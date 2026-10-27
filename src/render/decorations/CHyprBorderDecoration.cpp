@@ -72,14 +72,19 @@ void CHyprBorderDecoration::draw(Render::CRenderContext& ctx, PHLMONITOR pMonito
     const auto                      OUTERROUND       = ((ROUNDINGBASE + borderSize) - CORRECTIONOFFSET) * pMonitor->m_scale;
 
     CBorderPassElement::SBorderData data;
-    data.box           = windowBox;
-    data.grad1         = GRADIENT.current;
-    data.round         = ROUNDING;
-    data.outerRound    = OUTERROUND;
-    data.roundingPower = ROUNDINGPOWER;
-    data.a             = a;
-    data.borderSize    = borderSize;
-    data.window        = m_window;
+    data.box                 = windowBox;
+    data.grad1               = GRADIENT.current;
+    data.round               = ROUNDING;
+    data.outerRound          = OUTERROUND;
+    data.roundingPower       = ROUNDINGPOWER;
+    const int TITLEBARHEIGHT = m_window->presentation().titleBarHeight();
+
+    data.a          = a;
+    data.borderSize = borderSize;
+    // Grips run from the outer frame corner to the title bar's end, so include the
+    // frame thickness on top of the title bar's own height.
+    data.gripSize = TITLEBARHEIGHT > 0 ? TITLEBARHEIGHT + borderSize : 0;
+    data.window   = m_window;
 
     if (GRADIENT.transitioning) {
         data.hasGrad2 = true;

@@ -10,6 +10,7 @@ class CBorderPassElement : public IPassElement {
         bool                       hasGrad2 = false;
         float                      lerp = 0.F, a = 1.F;
         int                        round = 0, borderSize = 1, outerRound = -1;
+        int                        gripSize      = 0;
         float                      roundingPower = 2.F;
         PHLWINDOWREF               window;
     };

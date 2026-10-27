@@ -225,6 +225,10 @@ CHyprColor CWindowPresentation::borderColor() const {
     return m_borderDecoration->currentColor();
 }
 
+int CWindowPresentation::titleBarHeight() const {
+    return m_titleBarDecoration ? m_titleBarDecoration->currentHeight() : 0;
+}
+
 bool CWindowPresentation::opaque() const {
     return opaque(renderPresentation());
 }
