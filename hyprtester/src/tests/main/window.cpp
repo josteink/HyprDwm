@@ -2525,7 +2525,7 @@ TEST_CASE(titleBarCloseButton) {
     SPAWN_KITTY("kitty_titlebar_close", {"-o", "confirm_os_window_close=0", "-o", "remember_window_size=no"});
     Tests::sync();
 
-    // Title bar row: x=22, y=22, size 1876x20. Close button: 20x20 at (1878,22).
+    // Title bar row: x=22, y=22, size 1876x20. Close button: 19x19 at (1879,22).
     OK(getFromSocket("/dispatch hl.dsp.cursor.move({ x = 1888, y = 32 })"));
     OK(getFromSocket("/eval hl.plugin.test.click(272, 1)"));
     OK(getFromSocket("/eval hl.plugin.test.click(272, 0)"));

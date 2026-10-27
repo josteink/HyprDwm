@@ -5,7 +5,7 @@
 #include <optional>
 
 namespace TitleBar {
-    constexpr int SEPARATOR       = 2;
+    constexpr int SEPARATOR       = 1;
     constexpr int TEXT_PADDING    = 2;
     constexpr int MIN_BUTTON_SIZE = 10;
 
@@ -19,6 +19,7 @@ namespace TitleBar {
     struct SLayout {
         CBox                titleBar;
         CBox                textArea;
+        CBox                separator;
         std::optional<CBox> closeButton;
     };
 

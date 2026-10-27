@@ -1,4 +1,5 @@
 #include "CHyprBorderDecoration.hpp"
+#include "TitleBarLayout.hpp"
 #include "../../desktop/view/window/WindowGroupMembership.hpp"
 #include "../../desktop/view/window/WindowPresentation.hpp"
 #include "../../Compositor.hpp"
@@ -78,12 +79,14 @@ void CHyprBorderDecoration::draw(Render::CRenderContext& ctx, PHLMONITOR pMonito
     data.outerRound          = OUTERROUND;
     data.roundingPower       = ROUNDINGPOWER;
     const int TITLEBARHEIGHT = m_window->presentation().titleBarHeight();
+    const int TITLEPANELH    = TITLEBARHEIGHT > 0 ? std::max(0, TITLEBARHEIGHT - TitleBar::SEPARATOR) : 0;
 
     data.a          = a;
     data.borderSize = borderSize;
-    // Grips run from the outer frame corner to the title bar's end, so include the
-    // frame thickness on top of the title bar's own height.
-    data.gripSize = TITLEBARHEIGHT > 0 ? TITLEBARHEIGHT + borderSize : 0;
+    data.bevelMode  = BORDER_BEVEL_FRAME;
+    // Grips run from the outer frame corner to the title panel's bottom, so include
+    // the frame thickness on top of the panel height, not the separator below it.
+    data.gripSize = TITLEPANELH > 0 ? TITLEPANELH + borderSize : 0;
     data.window   = m_window;
 
     if (GRADIENT.transitioning) {

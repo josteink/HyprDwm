@@ -2,6 +2,12 @@
 #include "PassElement.hpp"
 #include "../../config/shared/complex/ComplexDataTypes.hpp"
 
+enum eBorderBevelMode {
+    BORDER_BEVEL_LEGACY = 0,
+    BORDER_BEVEL_FRAME,
+    BORDER_BEVEL_PANEL,
+};
+
 class CBorderPassElement : public IPassElement {
   public:
     struct SBorderData {
@@ -11,6 +17,7 @@ class CBorderPassElement : public IPassElement {
         float                      lerp = 0.F, a = 1.F;
         int                        round = 0, borderSize = 1, outerRound = -1;
         int                        gripSize      = 0;
+        int                        bevelMode     = BORDER_BEVEL_LEGACY;
         float                      roundingPower = 2.F;
         PHLWINDOWREF               window;
     };

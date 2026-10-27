@@ -273,12 +273,12 @@ void CHyprTitleBarDecoration::draw(Render::CRenderContext& ctx, PHLMONITOR pMoni
         return;
 
     const int               SEP     = std::max(1, sc<int>(std::round(SCALE)));
-    const int               SEPSIZE = SEP * 2;
     const int               PADDING = scaledThickness(TitleBar::TEXT_PADDING, SCALE);
     const int               MINBTN  = std::max(3, sc<int>(std::round(TitleBar::MIN_BUTTON_SIZE * SCALE)));
+    const int               BEVELPX = std::max(1, sc<int>(std::round(2.0 * SCALE)));
 
     TitleBar::SLayoutConfig layoutConfig;
-    layoutConfig.separator     = SEPSIZE;
+    layoutConfig.separator     = SEP;
     layoutConfig.padding       = PADDING;
     layoutConfig.minButtonSize = MINBTN;
     layoutConfig.closeButton   = *PCLOSEBUTTON;
@@ -294,37 +294,18 @@ void CHyprTitleBarDecoration::draw(Render::CRenderContext& ctx, PHLMONITOR pMoni
     faceData.workspacePresentation = presentation;
     g_pHyprRenderer->addPassElement(ctx, makeUnique<CRectPassElement>(faceData));
 
-    // The title bar gets its own embossed edge, inside the frame's inner bevel.
-    const int BEVELPX = std::max(1, sc<int>(std::round(SCALE)));
+    // Raised title panel: two logical pixels, matching the frame's inner bevel.
     if (LAYOUT.titleBar.w > 2 * BEVELPX && LAYOUT.titleBar.h > 2 * BEVELPX) {
         CBorderPassElement::SBorderData bevelData;
         bevelData.box        = LAYOUT.titleBar.copy().expand(-BEVELPX);
         bevelData.grad1      = Config::CGradientValueData{FACE};
-        bevelData.borderSize = 1;
+        bevelData.borderSize = 2;
+        bevelData.bevelMode  = BORDER_BEVEL_PANEL;
         bevelData.round      = 0;
         bevelData.outerRound = 0;
         bevelData.a          = a;
         bevelData.window     = PWINDOW;
         g_pHyprRenderer->addPassElement(ctx, makeUnique<CBorderPassElement>(bevelData));
-    }
-
-    if (LAYOUT.titleBar.h > SEPSIZE) {
-        auto dark  = Motif::shade(FACE, false);
-        auto light = Motif::shade(FACE, true);
-        dark.a *= a;
-        light.a *= a;
-
-        CRectPassElement::SRectData darkData;
-        darkData.color                 = dark;
-        darkData.box                   = {LAYOUT.titleBar.x, LAYOUT.titleBar.y + LAYOUT.titleBar.h - SEPSIZE, LAYOUT.titleBar.w, sc<double>(SEP)};
-        darkData.workspacePresentation = presentation;
-        g_pHyprRenderer->addPassElement(ctx, makeUnique<CRectPassElement>(darkData));
-
-        CRectPassElement::SRectData lightData;
-        lightData.color                 = light;
-        lightData.box                   = {LAYOUT.titleBar.x, LAYOUT.titleBar.y + LAYOUT.titleBar.h - SEP, LAYOUT.titleBar.w, sc<double>(SEP)};
-        lightData.workspacePresentation = presentation;
-        g_pHyprRenderer->addPassElement(ctx, makeUnique<CRectPassElement>(lightData));
     }
 
     const auto TITLE = PWINDOW->metadata().title();
@@ -363,7 +344,7 @@ void CHyprTitleBarDecoration::draw(Render::CRenderContext& ctx, PHLMONITOR pMoni
 
     if (LAYOUT.closeButton) {
         const bool PRESSED     = m_pressedButton == PRESSED_BUTTON_CLOSE;
-        const auto buttonColor = PRESSED ? Motif::shade(FACE, false) : FACE;
+        const auto buttonColor = PRESSED ? Motif::ramp(FACE, 5) : FACE;
 
         auto       buttonFill = buttonColor;
         buttonFill.a *= a;
@@ -377,8 +358,9 @@ void CHyprTitleBarDecoration::draw(Render::CRenderContext& ctx, PHLMONITOR pMoni
         if (LAYOUT.closeButton->w > 2 * BEVELPX && LAYOUT.closeButton->h > 2 * BEVELPX) {
             CBorderPassElement::SBorderData buttonBevel;
             buttonBevel.box        = LAYOUT.closeButton->copy().expand(-BEVELPX);
-            buttonBevel.grad1      = Config::CGradientValueData{buttonColor};
-            buttonBevel.borderSize = 1;
+            buttonBevel.grad1      = Config::CGradientValueData{FACE};
+            buttonBevel.borderSize = 2;
+            buttonBevel.bevelMode  = BORDER_BEVEL_PANEL;
             buttonBevel.round      = 0;
             buttonBevel.outerRound = 0;
             buttonBevel.a          = a;
@@ -395,6 +377,15 @@ void CHyprTitleBarDecoration::draw(Render::CRenderContext& ctx, PHLMONITOR pMoni
             closeData.workspacePresentation = presentation;
             g_pHyprRenderer->addPassElement(ctx, makeUnique<CTexPassElement>(closeData));
         }
+    }
+
+    // Single black separator between the raised title row and the window content.
+    if (LAYOUT.separator.h > 0) {
+        CRectPassElement::SRectData separatorData;
+        separatorData.color                 = CHyprColor(0.F, 0.F, 0.F, a);
+        separatorData.box                   = LAYOUT.separator;
+        separatorData.workspacePresentation = presentation;
+        g_pHyprRenderer->addPassElement(ctx, makeUnique<CRectPassElement>(separatorData));
     }
 }
 

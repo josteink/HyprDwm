@@ -186,6 +186,7 @@ namespace Render::GL {
             float a             = 1.0;
             int   outerRound    = -1; /* use round */
             int   gripSize      = 0;  /* logical titlebar height, 0 disables resize grips */
+            int   bevelMode     = 0;  /* eBorderBevelMode */
         };
 
         void makeEGLCurrent();

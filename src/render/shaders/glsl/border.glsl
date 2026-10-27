@@ -22,13 +22,32 @@ vec3 motifShade(vec3 face, bool lightSide) {
     return outBytes / 255.0;
 }
 
+// Indigo Magic / 4DWM five-step ramp. 0 is the lightest, 5 the darkest,
+// 2 and 3 are the face itself.
+vec3 motifRamp(vec3 face, int step) {
+    vec3 bytes = floor(clamp(face, vec3(0.0), vec3(1.0)) * 255.0 + 0.5);
+    vec3 outBytes;
+    if (step == 0)
+        outBytes = bytes + floor((vec3(255.0) - bytes) * 0.55);
+    else if (step == 1)
+        outBytes = bytes + floor((vec3(255.0) - bytes) * 0.28);
+    else if (step == 4)
+        outBytes = floor(bytes * 0.80);
+    else if (step == 5)
+        outBytes = floor(bytes * 0.60);
+    else
+        outBytes = bytes;
+    return outBytes / 255.0;
+}
+
 #if USE_MIRROR
 vec4[2]
 #else
 vec4
 #endif
     getBorder(vec2 v_texcoord, float alpha, vec2 fullSizeUntransformed, float radiusOuter, float thick, float radius, float roundingPower, vec2 topLeft, vec2 fullSize,
-              int gradientLength, vec4 gradient[10], float angle, int gradient2Length, vec4 gradient2[10], float angle2, float gradientLerp, int bevel, float gripSize
+              int gradientLength, vec4 gradient[10], float angle, int gradient2Length, vec4 gradient2[10], float angle2, float gradientLerp, int bevel, float gripSize,
+              int bevelMode, float bevelUnit
 #if USE_CM
               ,
               int sourceTF, int targetTF, mat3 convertMatrix, vec2 srcTFRange, vec2 dstTFRange
@@ -119,73 +138,128 @@ vec4
     // bevel == 0 leaves the flat gradient, which is the Dracula frame.
     // Rounded-corner arc pixels (done) stay flat: the miter is only defined on the straight edges.
     if (bevel != 0 && !done && thick >= 1.0) {
-        float x  = originalPixCoord[0];
-        float y  = originalPixCoord[1];
-        float w  = fullSizeUntransformed[0];
-        float h  = fullSizeUntransformed[1];
-        float px = floor(x);
-        float py = floor(y);
-        float pw = floor(w);
-        float ph = floor(h);
-
-        // 5px frame: outer 2px raised, 1px face (the configured border color), inner 2px sunken.
-        float b = thick >= 5.0 ? 2.0 : 1.0;
-        if (thick < b * 2.0)
-            b = 1.0;
-        b = min(b, max(floor(min(pw, ph) * 0.5), 1.0));
-
+        float x    = originalPixCoord[0];
+        float y    = originalPixCoord[1];
+        float w    = fullSizeUntransformed[0];
+        float h    = fullSizeUntransformed[1];
+        float px   = floor(x);
+        float py   = floor(y);
+        float pw   = floor(w);
+        float ph   = floor(h);
         float edge = min(min(x, w - x), min(y, h - y));
-        if (thick < 2.0 || edge < b)
-            pixColor.rgb = motifShade(pixColor.rgb, motifRaisedLight(px, py, pw, ph, b));
-        else if (edge >= thick - b) {
-            float inset = thick - b;
-            float iw    = pw - 2.0 * inset;
-            float ih    = ph - 2.0 * inset;
-            // OpenMotif drops the shadow when the box is narrower than twice the thickness.
-            if (iw >= b * 2.0 && ih >= b * 2.0) {
-                bool innerLight = motifRaisedLight(px - inset, py - inset, iw, ih, b);
-                pixColor.rgb    = motifShade(pixColor.rgb, !innerLight);
+
+        if (bevelMode == 2) {
+            // Raised title bar / button panel: two logical pixels with two shades per side.
+            float bandHalf  = max(1.0, floor(thick * 0.5 + 0.5));
+            float dT        = y, dB = ph - 1.0 - py, dL = x, dR = pw - 1.0 - px;
+            bool  lightSide = motifRaisedLight(px, py, pw, ph, thick);
+            float pos;
+            if (lightSide)
+                pos = (py < thick && px < thick) ? min(dT, dL) : ((py < thick) ? dT : dL);
+            else
+                pos = (py >= ph - thick && px >= pw - thick) ? min(dB, dR) : ((py >= ph - thick) ? dB : dR);
+
+            int step     = lightSide ? (pos < bandHalf ? 0 : 1) : (pos < bandHalf ? 5 : 4);
+            pixColor.rgb = motifRamp(faceRGB, step);
+        } else if (bevelMode == 1 && radius < 0.5 && (thick - 2.0 * bevelUnit) >= 2.0) {
+            // 4DWM frame: one logical pixel of black outside and inside, a six-step ramp between.
+            float BLACK = bevelUnit;
+            float bev   = thick - 2.0 * BLACK;
+
+            if (edge < BLACK || edge >= thick - BLACK) {
+                pixColor.rgb = vec3(0.0, 0.0, 0.0);
+            } else {
+                float pT = y - BLACK;
+                float pB = y - (h - thick + BLACK);
+                float pL = x - BLACK;
+                float pR = x - (w - thick + BLACK);
+
+                float p;
+                if (x < thick && y < thick)
+                    p = min(pT, pL);
+                else if (x >= w - thick && y >= h - thick)
+                    p = max(pB, pR);
+                else if (x >= w - thick && y < thick)
+                    p = (pT + pR <= bev - 1.0) ? pT : pR;
+                else if (x < thick && y >= h - thick)
+                    p = (pL + pB <= bev - 1.0) ? pL : pB;
+                else if (y < thick)
+                    p = pT;
+                else if (y >= h - thick)
+                    p = pB;
+                else if (x < thick)
+                    p = pL;
+                else
+                    p = pR;
+
+                int step;
+                if (p < bevelUnit)
+                    step = 0;
+                else if (p < 2.0 * bevelUnit && p < bev - bevelUnit)
+                    step = 1;
+                else if (p >= bev - bevelUnit)
+                    step = 5;
+                else if (p >= bev - 2.0 * bevelUnit)
+                    step = 4;
+                else
+                    step = 2;
+
+                pixColor.rgb = motifRamp(faceRGB, step);
+
+                // Decorative corner resize grips. The notch is always dark on the
+                // lower x/y side and light on the higher x/y side.
+                if (gripSize > 0.0 && gripSize * 2.0 < min(w, h)) {
+                    float wideHalf   = max(1.0, floor(bev / 3.0 + 0.5));
+                    float narrowHalf = max(1.0, floor(bev / 6.0 + 0.5));
+                    bool  top        = py < thick;
+                    bool  bottom     = py >= ph - thick;
+                    bool  left       = px < thick;
+                    bool  right      = px >= pw - thick;
+
+                    if (top || bottom) {
+                        float outerDist = top ? pT : (bev - 1.0 - pB);
+                        float notchHalf = outerDist < bev - 2.0 ? wideHalf : narrowHalf;
+                        float a         = px;
+                        bool  dark      = (a >= gripSize - notchHalf && a < gripSize) || (a >= (w - gripSize) - notchHalf && a < (w - gripSize));
+                        bool  light     = (a >= gripSize && a < gripSize + notchHalf) || (a >= (w - gripSize) && a < (w - gripSize) + notchHalf);
+                        if (dark)
+                            pixColor.rgb = motifRamp(faceRGB, 5);
+                        else if (light)
+                            pixColor.rgb = motifRamp(faceRGB, 0);
+                    }
+
+                    if (left || right) {
+                        float outerDist = left ? pL : (bev - 1.0 - pR);
+                        float notchHalf = outerDist < bev - 2.0 ? wideHalf : narrowHalf;
+                        float a         = py;
+                        bool  dark      = (a >= gripSize - notchHalf && a < gripSize) || (a >= (h - gripSize) - notchHalf && a < (h - gripSize));
+                        bool  light     = (a >= gripSize && a < gripSize + notchHalf) || (a >= (h - gripSize) && a < (h - gripSize) + notchHalf);
+                        if (dark)
+                            pixColor.rgb = motifRamp(faceRGB, 5);
+                        else if (light)
+                            pixColor.rgb = motifRamp(faceRGB, 0);
+                    }
+                }
             }
-        }
-    }
+        } else {
+            // Legacy Motif bevel, still used by non-SGI callers and by rounded frames.
+            float b = thick >= 5.0 ? 2.0 : 1.0;
+            if (thick < b * 2.0)
+                b = 1.0;
+            b = min(b, max(floor(min(pw, ph) * 0.5), 1.0));
 
-    // 4DWM/SGI-style resize grips: a dark+light notch across the frame at the end
-    // of each corner arm. The arm length follows the title bar height.
-    if (gripSize > 0.0 && !done && thick >= 1.0 && gripSize > thick &&
-        gripSize * 2.0 < min(fullSizeUntransformed[0], fullSizeUntransformed[1])) {
-        float x  = originalPixCoord[0];
-        float y  = originalPixCoord[1];
-        float w  = fullSizeUntransformed[0];
-        float h  = fullSizeUntransformed[1];
-        float px = floor(x);
-        float py = floor(y);
-        float b  = thick >= 5.0 ? 2.0 : 1.0;
-
-        bool top    = py < thick;
-        bool bottom = py >= h - thick;
-        bool left   = px < thick;
-        bool right  = px >= w - thick;
-
-        if (top || bottom) {
-            if (px >= gripSize - b && px < gripSize)
-                pixColor.rgb = motifShade(faceRGB, false);
-            else if (px >= gripSize && px < gripSize + b)
-                pixColor.rgb = motifShade(faceRGB, true);
-            else if (px >= w - gripSize - b && px < w - gripSize)
-                pixColor.rgb = motifShade(faceRGB, true);
-            else if (px >= w - gripSize && px < w - gripSize + b)
-                pixColor.rgb = motifShade(faceRGB, false);
-        }
-
-        if (left || right) {
-            if (py >= gripSize - b && py < gripSize)
-                pixColor.rgb = motifShade(faceRGB, false);
-            else if (py >= gripSize && py < gripSize + b)
-                pixColor.rgb = motifShade(faceRGB, true);
-            else if (py >= h - gripSize - b && py < h - gripSize)
-                pixColor.rgb = motifShade(faceRGB, true);
-            else if (py >= h - gripSize && py < h - gripSize + b)
-                pixColor.rgb = motifShade(faceRGB, false);
+            if (thick < 2.0 || edge < b)
+                pixColor.rgb = motifShade(faceRGB, motifRaisedLight(px, py, pw, ph, b));
+            else if (edge >= thick - b) {
+                float inset = thick - b;
+                float iw    = pw - 2.0 * inset;
+                float ih    = ph - 2.0 * inset;
+                // OpenMotif drops the shadow when the box is narrower than twice the thickness.
+                if (iw >= b * 2.0 && ih >= b * 2.0) {
+                    bool innerLight = motifRaisedLight(px - inset, py - inset, iw, ih, b);
+                    pixColor.rgb    = motifShade(faceRGB, !innerLight);
+                }
+            }
         }
     }
 

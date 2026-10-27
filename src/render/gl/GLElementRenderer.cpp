@@ -16,7 +16,8 @@ void CGLElementRenderer::draw(CRenderContext& ctx, WP<CBorderPassElement> elemen
                                      .borderSize    = m_data.borderSize,
                                      .a             = m_data.a,
                                      .outerRound    = m_data.outerRound,
-                                     .gripSize      = m_data.gripSize});
+                                     .gripSize      = m_data.gripSize,
+                                     .bevelMode     = m_data.bevelMode});
     else
         g_pHyprOpenGL->renderBorder(ctx, m_data.box, m_data.grad1,
                                     {.round         = m_data.round,
@@ -24,7 +25,8 @@ void CGLElementRenderer::draw(CRenderContext& ctx, WP<CBorderPassElement> elemen
                                      .borderSize    = m_data.borderSize,
                                      .a             = m_data.a,
                                      .outerRound    = m_data.outerRound,
-                                     .gripSize      = m_data.gripSize});
+                                     .gripSize      = m_data.gripSize,
+                                     .bevelMode     = m_data.bevelMode});
 };
 
 void CGLElementRenderer::draw(CRenderContext& ctx, WP<CClearPassElement> element, const CRegion& damage) {

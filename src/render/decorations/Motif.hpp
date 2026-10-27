@@ -9,4 +9,8 @@ namespace Motif {
 
     // Same 8-bit recipe as the CDE panel CSS: light is halfway to white, dark is half the face.
     CHyprColor shade(const CHyprColor& face, bool lightSide);
+
+    // Indigo Magic / 4DWM five-step ramp. 0 is the lightest, 5 the darkest,
+    // 2 and 3 are the face itself.
+    CHyprColor ramp(const CHyprColor& face, int step);
 }

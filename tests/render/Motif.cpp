@@ -37,3 +37,17 @@ TEST(Motif, shadeExtremes) {
     EXPECT_FLOAT_EQ(Motif::shade(BLACK, false).r, 0.F);
     EXPECT_FLOAT_EQ(Motif::shade(BLACK, true).r, 127.0F / 255.0F);
 }
+
+TEST(Motif, rampMatchesShaderRecipe) {
+    const CHyprColor FACE = CHyprColor(0.5F, 0.5F, 0.5F, 0.5F);
+
+    EXPECT_FLOAT_EQ(Motif::ramp(FACE, 0).r, 197.0F / 255.0F);
+    EXPECT_FLOAT_EQ(Motif::ramp(FACE, 1).r, 163.0F / 255.0F);
+    EXPECT_FLOAT_EQ(Motif::ramp(FACE, 2).r, 128.0F / 255.0F);
+    EXPECT_FLOAT_EQ(Motif::ramp(FACE, 3).r, 128.0F / 255.0F);
+    EXPECT_FLOAT_EQ(Motif::ramp(FACE, 4).r, 102.0F / 255.0F);
+    EXPECT_FLOAT_EQ(Motif::ramp(FACE, 5).r, 76.0F / 255.0F);
+
+    EXPECT_FLOAT_EQ(Motif::ramp(FACE, 0).a, 0.5F);
+    EXPECT_FLOAT_EQ(Motif::ramp(FACE, 5).a, 0.5F);
+}

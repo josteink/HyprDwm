@@ -231,7 +231,8 @@ std::vector<SP<IValue>> Values::getConfigValues() {
         MS<Float>("decoration:dim_around", "how much the dimaround window rule should dim by.", 0.4, {.min = 0, .max = 1, .refresh = Supplementary::REFRESH_WINDOW_STATES}),
         MS<String>("decoration:screen_shader", "a path to a custom shader to be applied at the end of rendering.", STRVAL_EMPTY, {.refresh = Supplementary::REFRESH_SCREEN_SHADER}),
         MS<Bool>("decoration:border_part_of_window", "whether the border should be treated as a part of the window.", true),
-        MS<Bool>("decoration:border_bevel", "Motif bevel on window borders and title bars: light top and left, dark bottom and right, derived from the border color.", false,
+        MS<Bool>("decoration:border_bevel",
+                 "SGI/Motif bevel on window borders and title bars: 1px black edges, a shaded frame ramp derived from the border color, and decorative corner resize grips.", false,
                  {.refresh = Supplementary::REFRESH_WINDOW_STATES}),
 
         /*
